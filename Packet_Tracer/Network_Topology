@@ -1,0 +1,161 @@
+
+🗺️ Network Topology Addressing Schema
+
+• Router 1: LAN 192.168.1.0/24 | WAN to R2 10.1.1.0/30 | WAN to R4 10.4.4.0/30
+• Router 2: LAN 192.168.2.0/24 | WAN to R1 10.1.1.0/30 | WAN to R3 10.2.2.0/30
+• Router 3: LAN 192.168.3.0/24 | WAN to R2 10.2.2.0/30 | WAN to R4 10.3.3.0/30
+• Router 4: LAN 192.168.4.0/24 | WAN to R3 10.3.3.0/30 | WAN to R1 10.4.4.0/30
+
+1. Router 1 Configuration Code
+
+text
+enable
+configure terminal
+hostname Router1
+
+! --- INTERFACE CONFIGURATION ---
+interface GigabitEthernet0/0
+ ip address 192.168.1.1 255.255.255.0
+ no shutdown
+exit
+
+interface Serial0/0/0
+ ip address 10.1.1.1 255.255.255.252
+ no shutdown
+exit
+
+interface Serial0/0/1
+ ip address 10.4.4.2 255.255.255.252
+ no shutdown
+exit
+
+! --- OSPF DYNAMIC ROUTING SYSTEM ---
+router ospf 1
+ router-id 1.1.1.1
+ network 192.168.1.0 0.0.0.255 area 0
+ network 10.1.1.0 0.0.0.3 area 0
+ network 10.4.4.0 0.0.0.3 area 0
+exit
+end
+write memory
+Use code with caution.
+
+2. Router 2 Configuration Code
+
+text
+enable
+configure terminal
+hostname Router2
+
+! --- INTERFACE CONFIGURATION ---
+interface GigabitEthernet0/0
+ ip address 192.168.2.1 255.255.255.0
+ no shutdown
+exit
+
+interface Serial0/0/0
+ ip address 10.1.1.2 255.255.255.252
+ no shutdown
+exit
+
+interface Serial0/0/1
+ ip address 10.2.2.1 255.255.255.252
+ no shutdown
+exit
+
+! --- OSPF DYNAMIC ROUTING SYSTEM ---
+router ospf 1
+ router-id 2.2.2.2
+ network 192.168.2.0 0.0.0.255 area 0
+ network 10.1.1.0 0.0.0.3 area 0
+ network 10.2.2.0 0.0.0.3 area 0
+exit
+end
+write memory
+Use code with caution.
+
+3. Router 3 Configuration Code
+
+text
+enable
+configure terminal
+hostname Router3
+
+! --- INTERFACE CONFIGURATION ---
+interface GigabitEthernet0/0
+ ip address 192.168.3.1 255.255.255.0
+ no shutdown
+exit
+
+interface Serial0/0/0
+ ip address 10.2.2.2 255.255.255.252
+ no shutdown
+exit
+
+interface Serial0/0/1
+ ip address 10.3.3.1 255.255.255.252
+ no shutdown
+exit
+
+! --- OSPF DYNAMIC ROUTING SYSTEM ---
+router ospf 1
+ router-id 3.3.3.3
+ network 192.168.3.0 0.0.0.255 area 0
+ network 10.2.2.0 0.0.0.3 area 0
+ network 10.3.3.0 0.0.0.3 area 0
+exit
+end
+write memory
+Use code with caution.
+
+4. Router 4 Configuration Code
+
+text
+enable
+configure terminal
+hostname Router4
+
+! --- INTERFACE CONFIGURATION ---
+interface GigabitEthernet0/0
+ ip address 192.168.4.1 255.255.255.0
+ no shutdown
+exit
+
+interface Serial0/0/0
+ ip address 10.3.3.2 255.255.255.252
+ no shutdown
+exit
+
+interface Serial0/0/1
+ ip address 10.4.4.1 255.255.255.252
+ no shutdown
+exit
+
+! --- OSPF DYNAMIC ROUTING SYSTEM ---
+router ospf 1
+ router-id 4.4.4.4
+ network 192.168.4.0 0.0.0.255 area 0
+ network 10.3.3.0 0.0.0.3 area 0
+ network 10.4.4.0 0.0.0.3 area 0
+exit
+end
+write memory
+Use code with caution.
+
+⚡ How to Simulate Link Failure and Verify OSPF Fault Tolerance
+
+1. Verify Neighbor Relationships:
+Run show ip ospf neighbor on any router. You should see adjacent routers listed in a FULL state.
+2. Check the Routing Table:
+Run show ip route. OSPF routes will be populated dynamically and marked with an O.
+3. Trace Route:
+Run a traceroute 192.168.3.10 from a PC on Router 1 to a PC on Router 3. Note down the path it takes (e.g., passing through Router 2).
+4. Induce Link Failure:
+Go to Router 1 and shut down the interface leading to Router 2:text
+Router1(config)# interface Serial0/0/0
+Router1(config-if)# shutdown
+Use code with caution.
+5. Observe Convergence:
+OSPF will automatically detect the drop after the dead interval, flood link-state updates (LSAs), and recalculate the Shortest Path First (SPF) tree.
+6. Verify Redirection:
+Run traceroute 192.168.3.10 again. The traffic will automatically bypass the broken link and route dynamically through Router 4 to reach Router 3 without manual intervention.
