@@ -1,0 +1,110 @@
+
+🗺️ Network Topology Addressing Schema
+
+• Router 1 LAN: 192.168.1.0/24 (Gateway: 192.168.1.1)
+• Router 2 LAN: 192.168.2.0/24 (Gateway: 192.168.2.1)
+• Router 3 LAN: 192.168.3.0/24 (Gateway: 192.168.3.1)
+• Serial Link 1 (R1-R2): 10.1.1.0/30 (10.1.1.1 on R1, 10.1.1.2 on R2)
+• Serial Link 2 (R2-R3): 10.2.2.0/30 (10.2.2.1 on R2, 10.2.2.2 on R3)
+
+1. Router 1 Configuration Code
+
+text
+enable
+configure terminal
+hostname Router1
+
+! --- CONFIGURE INTERFACES ---
+interface GigabitEthernet0/0
+ ip address 192.168.1.1 255.255.255.0
+ no shutdown
+exit
+
+interface Serial0/0/0
+ ip address 10.1.1.1 255.255.255.252
+ clock rate 64000
+ no shutdown
+exit
+
+! --- STATIC ROUTE CONFIGURATION ---
+! Route to Router 2's LAN via next-hop R2
+ip route 192.168.2.0 255.255.255.0 10.1.1.2
+! Route to Router 3's LAN via next-hop R2
+ip route 192.168.3.0 255.255.255.0 10.1.1.2
+! Route to the remote Serial Link between R2 and R3
+ip route 10.2.2.0 255.255.255.252 10.1.1.2
+
+end
+write memory
+Use code with caution.
+
+2. Router 2 Configuration Code
+
+text
+enable
+configure terminal
+hostname Router2
+
+! --- CONFIGURE INTERFACES ---
+interface GigabitEthernet0/0
+ ip address 192.168.2.1 255.255.255.0
+ no shutdown
+exit
+
+interface Serial0/0/0
+ ip address 10.1.1.2 255.255.255.252
+ no shutdown
+exit
+
+interface Serial0/0/1
+ ip address 10.2.2.1 255.255.255.252
+ clock rate 64000
+ no shutdown
+exit
+
+! --- STATIC ROUTE CONFIGURATION ---
+! Route to Router 1's LAN via next-hop R1
+ip route 192.168.1.0 255.255.255.0 10.1.1.1
+! Route to Router 3's LAN via next-hop R3
+ip route 192.168.3.0 255.255.255.0 10.2.2.2
+
+end
+write memory
+Use code with caution.
+
+3. Router 3 Configuration Code
+
+text
+enable
+configure terminal
+hostname Router3
+
+! --- CONFIGURE INTERFACES ---
+interface GigabitEthernet0/0
+ ip address 192.168.3.1 255.255.255.0
+ no shutdown
+exit
+
+interface Serial0/0/0
+ ip address 10.2.2.2 255.255.255.252
+ no shutdown
+exit
+
+! --- STATIC ROUTE CONFIGURATION ---
+! Route to Router 2's LAN via next-hop R2
+ip route 192.168.2.0 255.255.255.0 10.2.2.1
+! Route to Router 1's LAN via next-hop R2
+ip route 192.168.1.0 255.255.255.0 10.2.2.1
+! Route to the remote Serial Link between R1 and R2
+ip route 10.1.1.0 255.255.255.252 10.2.2.1
+
+end
+write memory
+Use code with caution.
+
+🔍 Verification Commands
+
+Run these commands in the CLI of any router to verify connectivity and route tables:
+• show ip route — Verifies that all static routes (marked with a S) are active in the routing table.
+• ping 192.168.3.10 — Tests end-to-end connectivity from a PC on LAN 1 to a PC on LAN 3.
+• traceroute 192.168.3.10 — Traces each router hop to confirm that paths are traversed properly.
